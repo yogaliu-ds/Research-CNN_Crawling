@@ -41,9 +41,9 @@ class CnnSpider(scrapy.Spider):
         return math.ceil(number / result_per_page) * result_per_page
 
     # Self setting
-    num_result = 50
-    company_name = 'alphabet'
-    result_per_page = 10
+    num_result = 203
+    company_name = 'hp'
+    result_per_page = 50
 
     news_type = 'article'
     section_type = 'business'
@@ -67,24 +67,38 @@ class CnnSpider(scrapy.Spider):
         # 0. Open the browser
         # need to unzip the chromedriver to the python folder first
         driver = webdriver.Chrome()
+        
+        # Cuz the bitch won't preload the article if your window is too small to see it
+        driver.maximize_window()
         driver.get(response.url)
 
         # time.sleep is important, it can let us wait for the loading to complete
         # You'll get nothing if you don't set it
-        time.sleep(2)           
+        time.sleep(10)
 
         # WTF: the space ' ' in the class_name should be replaced by '.'
         # element = driver.find_elements(By.CLASS_NAME, "container__link.__link")
 
         # 1. Get the data (title, datetime, content)
-        temp_title = driver.find_elements(By.CLASS_NAME, "container__headline.__headline")
-        temp_datetime = driver.find_elements(By.CLASS_NAME, "container__date.__date.inline-placeholder")
-        temp_content = driver.find_elements(By.CLASS_NAME, "container__description.__description.inline-placeholder")
+        # temp_title = driver.find_elements(By.CLASS_NAME, "container__headline.__headline")
+        # temp_datetime = driver.find_elements(By.CLASS_NAME, "container__date.__date.inline-placeholder")
+        # temp_content = driver.find_elements(By.CLASS_NAME, "container__description.__description.inline-placeholder")
+
+        # 2023.07.19 updated
+        temp_title = driver.find_elements(By.CLASS_NAME, "container__headline.container_list-with-images__headline")
+        temp_datetime = driver.find_elements(By.CLASS_NAME, "container__date.container_list-with-images__date.inline-placeholder")
+        temp_content = driver.find_elements(By.CLASS_NAME, 'container__description.container_list-with-images__description.inline-placeholder')
+
+        # temp_content = driver.find_element_by_xpath('//div[@class="container__description.container_list-with-images__description.inline-placeholder"]/div')
+
+
+
 
         for x, y, z in zip(temp_title, temp_datetime, temp_content):
             temp['title'] = x.text
             temp['datetime'] = y.text
-            temp['content'] = z.text
+            temp['content'] = z.get_attribute("data-original-text")
+            # temp['content'] = z.text
 
             yield temp
 
